@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Enlace al archivo CSS :) -->
+</head>
+<body>
+    <h2>Formulario de Estudiantes</h2>
+    <form id="formulario">
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" required>
+        <label for="apellido">Apellido:</label>
+        <input type="text" id="apellido" required>
+        <label for="matricula">Matrícula:</label>
+        <input type="text" id="matricula" required>
+        <label for="nota">Nota:</label>
+        <input type="number" id="nota" required>
+
+        <button type="button" id="agregar">Agregar</button>
+        <button type="reset" id="limpiar">Limpiar</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Matrícula</th>
+                <th>Nota</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tabla"></tbody> <!-- Cuerpo de la tabla -->
+    </table>
+
+    <button id="guardar">Guardar</button>
+
+    <script>
+        const nombre = document.getElementById('nombre');
+        const apellido = document.getElementById('apellido');
+        const matricula = document.getElementById('matricula');
+        const nota = document.getElementById('nota');
+        const tabla = document.getElementById('tabla'); // Usamos directamente el tbody
+        const botonAgregar = document.getElementById('agregar');
+        const botonGuardar = document.getElementById('guardar');
+
+        let datosTabla = [];
+
+        // Cargar los datos de LocalStorage al cargar la página
+        window.onload = function() {
+            const datosGuardados = localStorage.getItem('datosTabla');
+            if (datosGuardados) {
+                datosTabla = JSON.parse(datosGuardados);
+                actualizarTabla();
+            }
+        };
+
+        // Función para agregar una fila a la tabla
+        botonAgregar.onclick = function() {
+            if (validarCampos()) {
+                const nuevoDato = {
+                    nombre: nombre.value.trim(),
+                    apellido: apellido.value.trim(),
+                    matricula: matricula.value.trim(),
+                    nota: nota.value.trim()
+                };
+                datosTabla.push(nuevoDato);
+                actualizarTabla();
+                limpiarFormulario();
+            }
+        };
+
+        // Función para validar los campos de entrada
+        function validarCampos() {
+            if (
+                nombre.value.trim() === '' ||
+                apellido.value.trim() === '' ||
+                matricula.value.trim() === '' ||
+                nota.value.trim() === ''
+            ) {
+                alert('No se permiten espacios en blanco');
+                return false;
+            }
+            return true;
+        }
+
+        // Funcion para actualizar la tabla (dentro del tbody)
+        function actualizarTabla() {
+            tabla.innerHTML = ''; // Limpiar el tbody
+            datosTabla.forEach((dato, index) => {
+                const fila = tabla.insertRow(); // Insertar fila en tbody
+                fila.insertCell(0).innerText = dato.nombre;
+                fila.insertCell(1).innerText = dato.apellido;
+                fila.insertCell(2).innerText = dato.matricula;
+                fila.insertCell(3).innerText = dato.nota;
+
+                const celdaAcciones = fila.insertCell(4);
+                celdaAcciones.classList.add('acciones');
+                const botonEditar = document.createElement('button');
+                botonEditar.innerText = 'Editar';
+                botonEditar.onclick = () => editarFila(index);
+
+                const botonEliminar = document.createElement('button');
+                botonEliminar.innerText = 'Eliminar';
+                botonEliminar.classList.add('eliminar');
+                botonEliminar.onclick = () => eliminarFila(index);
+
+                celdaAcciones.appendChild(botonEditar);
+                celdaAcciones.appendChild(botonEliminar);
+            });
+        }
+
+        // Funcion para limpiar el formulario
+        function limpiarFormulario() {
+            nombre.value = '';
+            apellido.value = '';
+            matricula.value = '';
+            nota.value = '';
+        }
+
+        // Funcion para eliminar una fila
+        function eliminarFila(index) {
+            datosTabla.splice(index, 1);
+            actualizarTabla();
+        }
+
+        // Funcion para editar una fila
+        function editarFila(index) {
+            const dato = datosTabla[index];
+            nombre.value = dato.nombre;
+            apellido.value = dato.apellido;
+            matricula.value = dato.matricula;
+            nota.value = dato.nota;
+
+            // Actualizar el boton Agregar para que edite en lugar de agregar
+            botonAgregar.innerText = 'Actualizar';
+            botonAgregar.onclick = function() {
+                if (validarCampos()) {
+                    datosTabla[index] = {
+                        nombre: nombre.value.trim(),
+                        apellido: apellido.value.trim(),
+                        matricula: matricula.value.trim(),
+                        nota: nota.value.trim()
+                    };
+                    actualizarTabla();
+                    limpiarFormulario();
+                    botonAgregar.innerText = 'Agregar';
+                    botonAgregar.onclick = agregarFila;
+                }
+            };
+        }
+
+        // Funcion para guardar los datos en LocalStorage
+        botonGuardar.onclick = function() {
+            localStorage.setItem('datosTabla', JSON.stringify(datosTabla));
+            alert('Datos guardados correctamente.');
+        };
+    </script>
+</body>
+</html>
